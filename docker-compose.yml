@@ -1,0 +1,103 @@
+# Full distributed runtime for VeritasCore.
+#
+# This is the "production-shaped" deployment: Postgres + Redis + a Celery-backed
+# backend + the Vite frontend. The SAME application code runs locally with zero
+# external services (SQLite + in-process bus + inline runner) — see README.
+#
+#   docker compose up --build
+#
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: veritas
+      POSTGRES_PASSWORD: veritas
+      POSTGRES_DB: veritascore
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U veritas -d veritascore"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+    environment:
+      DATABASE_URL: postgresql+asyncpg://veritas:veritas@postgres:5432/veritascore
+      REDIS_URL: redis://redis:6379/0
+      EVENT_BUS: redis
+      AUDIT_RUNNER: celery
+      TARGET_MODEL_API_URL: http://demo_target:8001/v1/respond
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      AUDIT_SIGNING_KEY_PATH: /app/keys/audit_signing_key.pem
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/app
+      - keys:/app/keys
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: celery -A backend.tasks.celery_app.celery_app worker --loglevel=info --pool=solo
+    environment:
+      DATABASE_URL: postgresql+asyncpg://veritas:veritas@postgres:5432/veritascore
+      REDIS_URL: redis://redis:6379/0
+      EVENT_BUS: redis
+      AUDIT_RUNNER: celery
+      TARGET_MODEL_API_URL: http://demo_target:8001/v1/respond
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      AUDIT_SIGNING_KEY_PATH: /app/keys/audit_signing_key.pem
+    volumes:
+      - ./:/app
+      - keys:/app/keys
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  demo_target:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: uvicorn backend.demo_target:app --host 0.0.0.0 --port 8001
+    ports:
+      - "8001:8001"
+
+  frontend:
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+    environment:
+      VITE_API_BASE: http://localhost:8000
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+
+volumes:
+  pgdata:
+  keys:

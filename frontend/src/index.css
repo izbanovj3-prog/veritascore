@@ -1,0 +1,218 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  VeritasCore Design System
+  Tone: cold forensic instrumentation — a regulatory monitoring terminal, not a SaaS dashboard.
+  Display font: Chakra Petch — angular, semi-condensed, reads as aerospace/government HUD (headers, status).
+  Data font:    JetBrains Mono — every technical value (probe IDs, hashes, signatures, scores, timestamps).
+                Pairing is on a contrast axis (technical sans display + monospace data), not two similar sans.
+  Palette (OKLCH, dark-only):
+    --bg      oklch(0.15 0.015 250)  near-black blue-slate
+    --surface oklch(0.185 0.017 250) panels
+    --border  oklch(0.31 0.02 250)   hairline structure
+    --text    oklch(0.93 0.012 240)  ink (≈15:1 on bg)
+    --muted   oklch(0.71 0.022 245)  secondary text (≈7:1 on bg — passes 4.5:1)
+    --accent  oklch(0.84 0.14 200)   one surgical cyan; the only chromatic UI color besides verdicts
+  Motion: exactly three deliberate, finite animations — phase transition (300ms ease-out, horizontal),
+          probe entry (150ms opacity only), certificate reveal (one orchestrated entrance). Nothing loops.
+          All gated behind prefers-reduced-motion.
+*/
+
+:root {
+  --bg: oklch(0.15 0.015 250);
+  --bg-panel: oklch(0.185 0.017 250);
+  --bg-elev: oklch(0.215 0.019 250);
+  --border: oklch(0.31 0.02 250);
+  --border-strong: oklch(0.42 0.022 250);
+  --text: oklch(0.93 0.012 240);
+  --muted: oklch(0.71 0.022 245);
+  --accent: oklch(0.84 0.14 200);
+  --accent-dim: oklch(0.66 0.11 205);
+  --pass: oklch(0.8 0.16 155);
+  --fail: oklch(0.68 0.2 18);
+  --warn: oklch(0.82 0.15 80);
+  --crit: oklch(0.64 0.24 18);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* semantic z-index scale */
+  --z-sticky: 100;
+  --z-modal-backdrop: 200;
+  --z-modal: 210;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background:
+    radial-gradient(1100px 560px at 82% -12%, oklch(0.84 0.14 200 / 0.06), transparent 60%),
+    var(--bg);
+  color: var(--text);
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  font-feature-settings: "ss02" 1, "cv01" 1;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+.display {
+  font-family: "Chakra Petch", "JetBrains Mono", ui-monospace, monospace;
+  text-wrap: balance;
+  letter-spacing: -0.01em;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* Visible, consistent keyboard focus on every interactive element. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.panel {
+  background: linear-gradient(180deg, var(--bg-panel), oklch(0.16 0.016 250));
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.panel-title {
+  font-family: "Chakra Petch", monospace;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.accent {
+  color: var(--accent);
+}
+
+.glow {
+  box-shadow: 0 0 0 1px oklch(0.84 0.14 200 / 0.22), 0 0 28px oklch(0.84 0.14 200 / 0.1);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+
+.badge-pass { color: var(--pass); border-color: oklch(0.8 0.16 155 / 0.45); background: oklch(0.8 0.16 155 / 0.1); }
+.badge-fail { color: var(--fail); border-color: oklch(0.68 0.2 18 / 0.5); background: oklch(0.68 0.2 18 / 0.1); }
+.badge-crit { color: oklch(0.98 0.02 18); border-color: var(--crit); background: oklch(0.64 0.24 18 / 0.22); }
+.badge-syn  { color: var(--accent); border-color: oklch(0.84 0.14 200 / 0.45); background: oklch(0.84 0.14 200 / 0.08); }
+
+/* Critical rows: a fixed, high-contrast state — no flashing (a11y) and no looping (screenshot-safe). */
+.row-crit {
+  border-color: var(--crit) !important;
+  background: oklch(0.64 0.24 18 / 0.12) !important;
+}
+
+/* --- Motion: three deliberate, finite animations ------------------------- */
+
+/* 1. probe entry — opacity only, 150ms, no translate */
+@keyframes probe-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.probe-in { animation: probe-in 150ms linear; }
+
+/* 2. certificate reveal — one orchestrated entrance */
+@keyframes cert-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.cert-in { animation: cert-in 420ms var(--ease-out); }
+
+@keyframes backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.backdrop-in { animation: backdrop-in 220ms var(--ease-out); }
+
+/* 3. agent phase transition is a 300ms ease-out horizontal move, applied as a
+   transition on the active marker (see AgentTimeline) via .phase-marker. */
+.phase-marker {
+  transition: transform 300ms var(--ease-out), opacity 300ms var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --- Scrollbars --------------------------------------------------------- */
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-thumb { background: oklch(0.3 0.02 250); border-radius: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* --- Controls ----------------------------------------------------------- */
+.btn {
+  font-family: "Chakra Petch", inherit;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border-radius: 10px;
+  border: 1px solid var(--accent);
+  background: oklch(0.84 0.14 200 / 0.1);
+  color: var(--accent);
+  padding: 12px 18px;
+  cursor: pointer;
+  transition: background 120ms var(--ease-out), border-color 120ms var(--ease-out);
+}
+.btn:hover { background: oklch(0.84 0.14 200 / 0.2); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btn-ghost {
+  border-color: var(--border-strong);
+  color: var(--text);
+  background: transparent;
+}
+.btn-ghost:hover { background: oklch(0.84 0.14 200 / 0.06); border-color: var(--accent); }
+
+.input {
+  width: 100%;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  padding: 11px 13px;
+  outline: none;
+  transition: border-color 120ms var(--ease-out);
+}
+.input:focus-visible { border-color: var(--accent); outline-offset: 0; }
+.input::placeholder { color: var(--muted); }

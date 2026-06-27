@@ -1,0 +1,28 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+
+# Runtime artifacts
+veritascore*.db
+keys/
+certificates/
+.env
+
+# Generated baselines are kept (the demo baseline is committed); ignore others
+baselines/*.json
+!baselines/demo-target-v1.json
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+*.tsbuildinfo
+
+# Local tooling / machine-specific config
+.claude/
+test-results/
+playwright-report/
+
+# Editor / OS
+.DS_Store

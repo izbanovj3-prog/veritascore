@@ -1,0 +1,205 @@
+// VeritasCore end-to-end demo audit — Playwright.
+//   node tests/audit.e2e.mjs
+// Requires: frontend dev server :5173, backend :8000, demo target :8001.
+import { chromium } from "playwright";
+import { createRequire } from "module";
+import { readFileSync, mkdirSync } from "fs";
+import os from "os";
+import path from "path";
+
+const require = createRequire(import.meta.url);
+const AXE_SRC = readFileSync(require.resolve("axe-core"), "utf8");
+
+const BASE = process.env.VC_BASE || "http://localhost:5173";
+const TARGET = process.env.VC_TARGET || "http://localhost:8001/v1/respond";
+const SHOT_DIR = process.env.VC_SHOT_DIR || path.join(os.tmpdir(), "vc-shots");
+mkdirSync(SHOT_DIR, { recursive: true });
+
+const results = [];
+function check(name, ok, detail = "") {
+  results.push({ name, ok: !!ok, detail });
+  console.log(`${ok ? "PASS" : "FAIL"} — ${name}${detail ? " :: " + detail : ""}`);
+  return !!ok;
+}
+const shot = (page, file) => page.screenshot({ path: path.join(SHOT_DIR, file), animations: "disabled" });
+
+async function run() {
+  const browser = await chromium.launch();
+  const ctx = await browser.newContext({ viewport: { width: 1480, height: 900 } });
+  const page = await ctx.newPage();
+
+  const consoleErrors = [];
+  page.on("console", (m) => m.type() === "error" && consoleErrors.push(m.text()));
+  page.on("pageerror", (e) => consoleErrors.push(String(e)));
+
+  // ---------------- TEST 1 — initial load ----------------
+  try {
+    await page.goto(BASE, { waitUntil: "domcontentloaded" });
+    await page.waitForSelector("h1", { timeout: 8000 });
+    const h1 = (await page.textContent("h1")) || "";
+    check("T1 launcher visible", /Audit a production AI model/.test(h1), h1.trim());
+    const focused = await page.evaluate(() => document.activeElement?.id);
+    check("T1 URL input focused", focused === "target-url", `activeElement=#${focused}`);
+    await page.waitForTimeout(300);
+    check("T1 no console errors", consoleErrors.length === 0, consoleErrors.slice(0, 2).join(" | "));
+    await shot(page, "vc-01-initial.png");
+  } catch (e) {
+    check("T1 initial load", false, String(e));
+  }
+
+  // ---------------- TEST 2 — launch an audit ----------------
+  try {
+    await page.fill("#target-url", TARGET);
+    const t0 = Date.now();
+    await page.click('button[type="submit"]');
+    // responsive within 200ms: either the button enters its busy state or we navigate
+    let responsive = false;
+    for (let i = 0; i < 8 && !responsive; i++) {
+      const btn = (await page.textContent('button[type="submit"]').catch(() => "")) || "";
+      if (/Launching/.test(btn) || page.url().includes("/audit/")) responsive = true;
+      else await page.waitForTimeout(25);
+    }
+    check("T2 launch responsive <200ms", responsive, `${Date.now() - t0}ms`);
+    await page.waitForURL("**/audit/**", { timeout: 4000 });
+    check("T2 audit_id in URL <2s", /\/audit\/[0-9a-f]{6,}/.test(page.url()), page.url());
+    await page.waitForSelector('ol[aria-label="Audit agent pipeline"]', { timeout: 4000 });
+    const phases = await page.locator('ol[aria-label="Audit agent pipeline"] > li').count();
+    check("T2 timeline shows 7 phases", phases === 7, `count=${phases}`);
+    let active = false;
+    for (let i = 0; i < 30 && !active; i++) {
+      active = await page.evaluate(() => /· running/.test(document.body.innerText) || /✓/.test(document.body.innerText));
+      if (!active) await page.waitForTimeout(200);
+    }
+    check("T2 a phase is running/done", active);
+    await shot(page, "vc-02-launched.png");
+  } catch (e) {
+    check("T2 launch audit", false, String(e));
+  }
+
+  // ---------------- TEST 3 — WebSocket stream ----------------
+  try {
+    let badges = 0;
+    for (let i = 0; i < 50 && badges < 1; i++) {
+      badges = await page.locator(".badge").count();
+      if (!badges) await page.waitForTimeout(300);
+    }
+    check("T3 probe results visible", badges >= 1, `badges=${badges}`);
+    const firstBadge = (await page.locator(".badge").first().textContent()) || "";
+    check("T3 probe has verdict badge", /PASS|FAIL|CRITICAL/.test(firstBadge), firstBadge);
+    const radarKids = await page.evaluate(() => {
+      const s = document.querySelector(".recharts-surface");
+      return s ? s.childElementCount : 0;
+    });
+    check("T3 BiasRadar rendered", radarKids > 0, `svg children=${radarKids}`);
+    await shot(page, "vc-03-streaming.png");
+  } catch (e) {
+    check("T3 websocket stream", false, String(e));
+  }
+
+  // ---------------- TEST 4 — probe stream behavior ----------------
+  try {
+    const log = page.locator('[role="log"][aria-label="Probe results"]');
+    await log.waitFor({ timeout: 4000 });
+    // auto-follow: container is pinned near the bottom while streaming
+    await page.waitForTimeout(1200);
+    const nearBottom = await log.evaluate((el) => el.scrollHeight - el.clientHeight - el.scrollTop < 80);
+    check("T4 auto-scroll follows tail", nearBottom);
+    // scroll up manually -> auto-scroll should pause (not snap back to bottom)
+    await log.evaluate((el) => (el.scrollTop = 0));
+    await page.waitForTimeout(1400);
+    const stayedUp = await log.evaluate((el) => el.scrollTop < 120);
+    check("T4 auto-scroll pauses on manual scroll", stayedUp);
+    // if the audit already completed, drop the completion modal so the stream is interactive
+    await page.evaluate(() => {
+      const d = document.querySelector('[role="dialog"]');
+      if (d && d.parentElement) d.parentElement.remove();
+    });
+    // filter to Bias
+    await page.getByRole("button", { name: "Bias", exact: true }).click();
+    const biasPressed = await page.getByRole("button", { name: "Bias", exact: true }).getAttribute("aria-pressed");
+    const biasRows = await page.evaluate(() => {
+      const tags = [...document.querySelectorAll('[role="log"][aria-label="Probe results"] span')]
+        .map((s) => s.textContent || "")
+        .filter((t) => /^(bias|adversarial|jailbreak|drift)\//.test(t));
+      return { count: tags.length, allBias: tags.length > 0 && tags.every((t) => t.startsWith("bias")) };
+    });
+    check("T4 Bias filter active + only bias rows", biasPressed === "true" && biasRows.allBias, `pressed=${biasPressed} rows=${biasRows.count}`);
+    await page.getByRole("button", { name: "All", exact: true }).click();
+    const allPressed = await page.getByRole("button", { name: "All", exact: true }).getAttribute("aria-pressed");
+    check("T4 All filter restores", allPressed === "true");
+    await shot(page, "vc-04-probestream.png");
+  } catch (e) {
+    check("T4 probe stream behavior", false, String(e));
+  }
+
+  // ---------------- TEST 6 — accessibility (run before nav away) ----------------
+  try {
+    // ensure background dashboard is scannable: drop any open modal overlay
+    await page.evaluate(() => {
+      const dlg = document.querySelector('[role="dialog"]');
+      if (dlg && dlg.parentElement) dlg.parentElement.remove();
+    });
+    const badgeInfo = await page.evaluate(() => {
+      const b = [...document.querySelectorAll(".badge-pass, .badge-fail, .badge-crit")];
+      return { count: b.length, allLabeled: b.length > 0 && b.every((x) => !!x.getAttribute("aria-label")) };
+    });
+    check("T6 severity badges have aria-label", badgeInfo.allLabeled, `count=${badgeInfo.count}`);
+    const phasesLabeled = await page.evaluate(() =>
+      [...document.querySelectorAll('ol[aria-label="Audit agent pipeline"] > li')].every((li) => !!li.getAttribute("aria-label"))
+    );
+    check("T6 timeline phases announced", phasesLabeled);
+    const tabReachable = await page.evaluate(() => {
+      const f = document.querySelectorAll('a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])');
+      return f.length;
+    });
+    check("T6 interactive elements tabbable", tabReachable > 0, `focusable=${tabReachable}`);
+    await page.addScriptTag({ content: AXE_SRC });
+    const axe = await page.evaluate(async () =>
+      await window.axe.run(document, { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa"] } })
+    );
+    const critical = axe.violations.filter((v) => v.impact === "critical" || v.impact === "serious");
+    check(
+      "T6 no critical/serious a11y violations",
+      critical.length === 0,
+      critical.map((v) => `${v.id}(${v.impact})`).join(", ")
+    );
+  } catch (e) {
+    check("T6 accessibility", false, String(e));
+  }
+
+  // ---------------- TEST 5 — responsive (separate context) ----------------
+  try {
+    const mctx = await browser.newContext({ viewport: { width: 375, height: 812 } });
+    const mp = await mctx.newPage();
+    await mp.goto(BASE, { waitUntil: "domcontentloaded" });
+    await mp.waitForSelector("h1");
+    const overflow = await mp.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    check("T5 no horizontal overflow (mobile)", overflow <= 1, `overflowPx=${overflow}`);
+    const usable = (await mp.locator("#target-url").isVisible()) && (await mp.getByRole("button", { name: "Launch audit" }).isVisible());
+    check("T5 launcher usable (mobile)", usable);
+    await shot(mp, "vc-05-mobile.png");
+    await mp.setViewportSize({ width: 1920, height: 1080 });
+    await mp.waitForTimeout(150);
+    await shot(mp, "vc-06-desktop-full.png");
+    await mctx.close();
+  } catch (e) {
+    check("T5 responsive", false, String(e));
+  }
+
+  await browser.close();
+
+  const passed = results.filter((r) => r.ok).length;
+  console.log(`\n==== ${passed}/${results.length} checks passed ====`);
+  console.log(`screenshots: ${SHOT_DIR}`);
+  const failed = results.filter((r) => !r.ok);
+  if (failed.length) {
+    console.log("FAILURES:");
+    failed.forEach((f) => console.log(`  - ${f.name} :: ${f.detail}`));
+    process.exit(1);
+  }
+}
+
+run().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "veritascore"
+version = "0.1.0"
+description = "VeritasCore — autonomous AI behavioral auditing system (WAIC 2026 MVP)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+authors = [{ name = "VeritasCore" }]
+
+# Core dependencies — these install cleanly on Python 3.11–3.14 (pure-python or
+# universal/abi3 wheels). The system runs end-to-end with ONLY these installed;
+# the heavier ML / distributed stacks below are optional and gracefully fall back.
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn>=0.29",          # plain uvicorn (no [standard]) for 3.14/Windows wheel safety
+    "websockets>=12",
+    "langgraph>=0.2.50",
+    "langchain-core>=0.3",
+    "pydantic>=2.6",
+    "pydantic-settings>=2.2",
+    "cryptography>=42",
+    "numpy>=1.26",
+    "httpx>=0.27",
+    "sqlalchemy[asyncio]>=2.0",
+    "aiosqlite>=0.20",
+    "reportlab>=4.0",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+# Real sentence-transformer embeddings + TF-IDF. May lack wheels on the very
+# newest CPython; the embedding layer auto-detects and falls back if absent.
+ml = ["scikit-learn>=1.4", "sentence-transformers>=2.7"]
+# Live Claude reasoning for the triage + probe-synthesis agents.
+llm = ["langchain-anthropic>=0.1"]
+# Full distributed runtime used by docker-compose (Celery workers + Postgres).
+distributed = ["celery[redis]>=5.3", "asyncpg>=0.29"]
+# Optional eval tooling.
+eval = ["deepeval>=0.21"]
+all = [
+    "scikit-learn>=1.4", "sentence-transformers>=2.7",
+    "langchain-anthropic>=0.1",
+    "celery[redis]>=5.3", "asyncpg>=0.29",
+    "deepeval>=0.21",
+]
+
+[tool.setuptools]
+packages = ["backend"]
+
+[tool.setuptools.package-dir]
+backend = "backend"
