@@ -1,0 +1,11 @@
+# Treat binary assets as binary (no EOL conversion — prevents corruption).
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
