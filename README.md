@@ -1,5 +1,13 @@
 # VeritasCore
 
+### ▶ Live demo: **https://izbanovj3-prog.github.io/veritascore/**
+
+> GitHub Pages is static-only (no Python backend), so the live site runs in
+> **recorded-demo mode**: clicking *Launch audit* replays a **real** captured
+> audit — the actual probe stream plus the real Ed25519-signed certificate.
+> For the fully live backend, run locally (below) or deploy the backend to a
+> Python host.
+
 **Autonomous AI behavioral auditing infrastructure.** VeritasCore deploys six
 autonomous "red-team" agents (real [LangGraph](https://langchain-ai.github.io/langgraph/)
 nodes) that continuously stress-test a deployed AI model for **alignment drift**,
