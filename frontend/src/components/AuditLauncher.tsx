@@ -4,6 +4,7 @@ import { ShieldCheck, Rocket, Loader2, Crosshair } from "lucide-react";
 import { startAudit } from "../api/client";
 
 const DEMO_URL = "http://localhost:8001/v1/respond";
+const DEMO = (import.meta as any).env?.VITE_DEMO_MODE === "1";
 
 export default function AuditLauncher() {
   const navigate = useNavigate();
@@ -57,6 +58,13 @@ export default function AuditLauncher() {
             </p>
           </div>
         </div>
+
+        {DEMO && (
+          <div className="mb-6 border border-accent-border bg-accent-dim px-3 py-2 font-mono text-2xs text-text">
+            <span className="text-accent">●</span> RECORDED DEMO — the Python backend isn't hosted on
+            GitHub Pages. Launch replays a real audit run (real probe stream + the real Ed25519-signed certificate).
+          </div>
+        )}
 
         <div className="space-y-6">
           <div className="space-y-2">

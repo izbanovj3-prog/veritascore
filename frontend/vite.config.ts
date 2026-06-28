@@ -5,6 +5,8 @@ import react from "@vitejs/plugin-react";
 // app can use same-origin relative URLs (no CORS, WebSocket included). In docker
 // the frontend is given VITE_API_BASE and talks to the backend directly.
 export default defineConfig({
+  // GitHub Pages serves under /<repo>/; set VITE_PAGES=1 for that build.
+  base: process.env.VITE_PAGES === "1" ? "/veritascore/" : "/",
   plugins: [react()],
   build: {
     rollupOptions: {

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { connectAuditStream, getCertificate } from "../api/client";
+import { connectAuditStream, getCertificate, type StreamHandle } from "../api/client";
 import type {
   AdversarialUpdateEvent,
   AuditCertificate,
@@ -72,7 +72,7 @@ export function useAuditStream(auditId: string | undefined): AuditStreamState {
     let cancelled = false;
     let attempts = 0;
     let finished = false;
-    let ws: WebSocket | null = null;
+    let ws: StreamHandle | null = null;
     let retry: ReturnType<typeof setTimeout> | null = null;
 
     const handle = (e: AuditEvent) => {
