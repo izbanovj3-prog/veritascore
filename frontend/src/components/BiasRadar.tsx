@@ -11,63 +11,75 @@ import { useAuditState } from "../context/AuditStreamContext";
 
 const AXES = ["gender", "ethnicity", "age", "religion", "disability"];
 
+// Read design tokens at runtime so Recharts SVG props carry no hardcoded hex.
+function cssVar(name: string, fallback: string): string {
+  if (typeof window === "undefined") return fallback;
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+}
+
 function BiasRadarImpl() {
   const { biasScores } = useAuditState();
 
   const data = useMemo(
     () =>
       AXES.map((axis) => ({
-        axis: axis[0].toUpperCase() + axis.slice(1),
+        axis: axis.toUpperCase(),
         value: Math.round((biasScores[axis] ?? 0) * 100) / 100,
       })),
     [biasScores]
   );
 
-  const peak = useMemo(
-    () => Math.max(0, ...AXES.map((a) => biasScores[a] ?? 0)),
-    [biasScores]
-  );
+  const peak = useMemo(() => Math.max(0, ...AXES.map((a) => biasScores[a] ?? 0)), [biasScores]);
 
-  // The Recharts subtree only rebuilds when bias scores change (twice per audit),
-  // not on every streamed probe. Animation is off for deterministic, jank-free updates.
-  const chart = useMemo(
-    () => (
+  const chart = useMemo(() => {
+    const accent = cssVar("--color-accent", "cyan");
+    const danger = cssVar("--color-danger", "tomato");
+    const grid = cssVar("--color-border", "slategray");
+    const muted = cssVar("--color-text-muted", "slategray");
+    const valueByAxis: Record<string, number> = Object.fromEntries(data.map((d) => [d.axis, d.value]));
+
+    const Tick = (props: any) => {
+      const { payload, x, y, textAnchor } = props;
+      const over = (valueByAxis[payload.value] ?? 0) > 0.6;
+      return (
+        <text x={x} y={y} textAnchor={textAnchor} fill={over ? danger : muted} fontSize={10} fontFamily="JetBrains Mono">
+          {payload.value}
+        </text>
+      );
+    };
+
+    return (
       <ResponsiveContainer>
-        <RadarChart data={data} outerRadius="72%">
-          <PolarGrid stroke="oklch(0.31 0.02 250)" />
-          <PolarAngleAxis dataKey="axis" tick={{ fill: "oklch(0.78 0.02 245)", fontSize: 11 }} />
-          <PolarRadiusAxis
-            domain={[0, 1]}
-            tick={{ fill: "oklch(0.6 0.02 250)", fontSize: 9 }}
-            stroke="oklch(0.31 0.02 250)"
-          />
+        <RadarChart data={data} outerRadius="70%">
+          <PolarGrid stroke={grid} />
+          <PolarAngleAxis dataKey="axis" tick={<Tick />} />
+          <PolarRadiusAxis domain={[0, 1]} tick={{ fill: muted, fontSize: 9 }} stroke={grid} axisLine={false} />
           <Radar
             dataKey="value"
-            stroke="oklch(0.84 0.14 200)"
-            fill="oklch(0.84 0.14 200)"
-            fillOpacity={0.32}
+            stroke={accent}
+            strokeWidth={1.5}
+            fill={accent}
+            fillOpacity={0.2}
+            dot={{ r: 3, fill: accent }}
             isAnimationActive={false}
           />
         </RadarChart>
       </ResponsiveContainer>
-    ),
-    [data]
-  );
+    );
+  }, [data]);
+
+  const critical = peak > 0.12;
 
   return (
-    <section className="panel p-4" aria-label="Bias disparity radar">
-      <div className="flex items-center justify-between mb-1">
-        <h2 className="panel-title">Bias disparity</h2>
-        <div className="text-[10px]" style={{ color: peak > 0.12 ? "var(--fail)" : "var(--muted)" }}>
-          peak Δ {peak.toFixed(2)}
-        </div>
+    <section aria-label="Bias disparity radar">
+      <div className="px-4 py-2 border-b border-border flex items-center justify-between">
+        <h3 className="font-display text-2xs uppercase tracking-widest text-muted">Bias_Disparity</h3>
+        <span className={`font-mono text-2xs ${critical ? "text-danger" : "text-muted"}`}>peak Δ {peak.toFixed(2)}</span>
       </div>
-      <div style={{ width: "100%", height: 230 }} role="img" aria-label={`Disparity by attribute, peak ${peak.toFixed(2)}`}>
+      <div className="h-56 px-2 pt-2" role="img" aria-label={`Bias disparity by attribute, peak ${peak.toFixed(2)}`}>
         {chart}
       </div>
-      <p className="text-[10px] mt-1" style={{ color: "var(--muted)" }}>
-        0 = parity · 1 = maximal disparity across paired probes
-      </p>
+      <p className="px-4 pb-3 font-mono text-2xs text-dim">0 = parity · 1 = maximal disparity</p>
     </section>
   );
 }

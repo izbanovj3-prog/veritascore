@@ -37,7 +37,7 @@ async function run() {
     await page.goto(BASE, { waitUntil: "domcontentloaded" });
     await page.waitForSelector("h1", { timeout: 8000 });
     const h1 = (await page.textContent("h1")) || "";
-    check("T1 launcher visible", /Audit a production AI model/.test(h1), h1.trim());
+    check("T1 launcher visible", /Audit Launcher/i.test(h1), h1.trim());
     const focused = await page.evaluate(() => document.activeElement?.id);
     check("T1 URL input focused", focused === "target-url", `activeElement=#${focused}`);
     await page.waitForTimeout(300);
@@ -67,7 +67,11 @@ async function run() {
     check("T2 timeline shows 7 phases", phases === 7, `count=${phases}`);
     let active = false;
     for (let i = 0; i < 30 && !active; i++) {
-      active = await page.evaluate(() => /· running/.test(document.body.innerText) || /✓/.test(document.body.innerText));
+      active = await page.evaluate(() =>
+        [...document.querySelectorAll('ol[aria-label="Audit agent pipeline"] > li')].some((li) =>
+          /: (running|done)/.test(li.getAttribute("aria-label") || "")
+        )
+      );
       if (!active) await page.waitForTimeout(200);
     }
     check("T2 a phase is running/done", active);
@@ -80,11 +84,11 @@ async function run() {
   try {
     let badges = 0;
     for (let i = 0; i < 50 && badges < 1; i++) {
-      badges = await page.locator(".badge").count();
+      badges = await page.locator(".probe-badge").count();
       if (!badges) await page.waitForTimeout(300);
     }
     check("T3 probe results visible", badges >= 1, `badges=${badges}`);
-    const firstBadge = (await page.locator(".badge").first().textContent()) || "";
+    const firstBadge = (await page.locator(".probe-badge").first().textContent()) || "";
     check("T3 probe has verdict badge", /PASS|FAIL|CRITICAL/.test(firstBadge), firstBadge);
     const radarKids = await page.evaluate(() => {
       const s = document.querySelector(".recharts-surface");
@@ -114,9 +118,9 @@ async function run() {
       const d = document.querySelector('[role="dialog"]');
       if (d && d.parentElement) d.parentElement.remove();
     });
-    // filter to Bias
-    await page.getByRole("button", { name: "Bias", exact: true }).click();
-    const biasPressed = await page.getByRole("button", { name: "Bias", exact: true }).getAttribute("aria-pressed");
+    // filter to bias
+    await page.getByRole("button", { name: "bias", exact: true }).click();
+    const biasPressed = await page.getByRole("button", { name: "bias", exact: true }).getAttribute("aria-pressed");
     const biasRows = await page.evaluate(() => {
       const tags = [...document.querySelectorAll('[role="log"][aria-label="Probe results"] span')]
         .map((s) => s.textContent || "")
@@ -124,9 +128,9 @@ async function run() {
       return { count: tags.length, allBias: tags.length > 0 && tags.every((t) => t.startsWith("bias")) };
     });
     check("T4 Bias filter active + only bias rows", biasPressed === "true" && biasRows.allBias, `pressed=${biasPressed} rows=${biasRows.count}`);
-    await page.getByRole("button", { name: "All", exact: true }).click();
-    const allPressed = await page.getByRole("button", { name: "All", exact: true }).getAttribute("aria-pressed");
-    check("T4 All filter restores", allPressed === "true");
+    await page.getByRole("button", { name: "all", exact: true }).click();
+    const allPressed = await page.getByRole("button", { name: "all", exact: true }).getAttribute("aria-pressed");
+    check("T4 all filter restores", allPressed === "true");
     await shot(page, "vc-04-probestream.png");
   } catch (e) {
     check("T4 probe stream behavior", false, String(e));
@@ -140,7 +144,7 @@ async function run() {
       if (dlg && dlg.parentElement) dlg.parentElement.remove();
     });
     const badgeInfo = await page.evaluate(() => {
-      const b = [...document.querySelectorAll(".badge-pass, .badge-fail, .badge-crit")];
+      const b = [...document.querySelectorAll(".probe-badge")];
       return { count: b.length, allLabeled: b.length > 0 && b.every((x) => !!x.getAttribute("aria-label")) };
     });
     check("T6 severity badges have aria-label", badgeInfo.allLabeled, `count=${badgeInfo.count}`);

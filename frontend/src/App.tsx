@@ -8,11 +8,7 @@ import AuditLauncher from "./components/AuditLauncher";
 const Dashboard = lazy(() => import("./Dashboard"));
 
 function DashboardFallback() {
-  return (
-    <div className="px-6 py-10 text-[12px]" style={{ color: "var(--muted)" }}>
-      Opening audit dashboard
-    </div>
-  );
+  return <div className="px-6 py-10 font-mono text-sm text-muted">Opening audit dashboard</div>;
 }
 
 export default function App() {
@@ -21,10 +17,10 @@ export default function App() {
       <Route
         path="/"
         element={
-          <>
+          <div className="min-h-screen flex flex-col bg-bg text-text">
             <Header />
             <AuditLauncher />
-          </>
+          </div>
         }
       />
       <Route

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { Play, Loader2, Crosshair } from "lucide-react";
+import { ShieldCheck, Rocket, Loader2, Crosshair } from "lucide-react";
 import { startAudit } from "../api/client";
 
 const DEMO_URL = "http://localhost:8001/v1/respond";
@@ -37,76 +37,107 @@ export default function AuditLauncher() {
   }
 
   return (
-    <main className="max-w-3xl mx-auto px-6 py-12">
-      <form className="panel glow p-8" onSubmit={launch}>
-        <h1 className="text-2xl font-extrabold mb-2">
-          Audit a production AI model<span className="accent">.</span>
-        </h1>
-        <p className="text-[13px] mb-7" style={{ color: "var(--muted)", maxWidth: "62ch" }}>
-          Six autonomous agents stress-test the target for bias, adversarial vulnerability,
-          behavioral drift, and GB/T 42118-2023 + EU AI Act compliance, then issue a
-          cryptographically signed certificate.
-        </p>
+    <main className="flex-1 flex items-center justify-center p-6 relative overflow-hidden terminal-grid">
+      <form
+        onSubmit={launch}
+        className="w-full max-w-2xl border border-border bg-surface p-10 relative"
+      >
+        {/* corner accents */}
+        <span className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-accent" aria-hidden="true" />
+        <span className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-accent" aria-hidden="true" />
 
-        <label htmlFor="target-url" className="block text-[11px] mb-1" style={{ color: "var(--muted)" }}>
-          Target model API URL
-        </label>
-        <input
-          id="target-url"
-          ref={urlRef}
-          className="input mb-4"
-          value={targetUrl}
-          onChange={(e) => setTargetUrl(e.target.value)}
-          inputMode="url"
-          spellCheck={false}
-          autoComplete="off"
-        />
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="model-name" className="block text-[11px] mb-1" style={{ color: "var(--muted)" }}>
-              Model name / version
-            </label>
-            <input id="model-name" className="input" value={modelName} onChange={(e) => setModelName(e.target.value)} />
+        <div className="flex items-center gap-4 mb-8">
+          <div className="p-3 border border-accent" aria-hidden="true">
+            <ShieldCheck className="text-accent" size={28} />
           </div>
           <div>
-            <label htmlFor="api-key" className="block text-[11px] mb-1" style={{ color: "var(--muted)" }}>
-              API key (optional)
+            <h1 className="font-display text-3xl font-bold tracking-tight">Audit Launcher</h1>
+            <p className="font-mono text-2xs text-muted tracking-[0.2em] uppercase">
+              Deploy autonomous red-team audit
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <label htmlFor="target-url" className="font-mono text-xs uppercase font-bold flex items-center gap-2 text-text">
+              <span className="w-1 h-1 bg-accent" aria-hidden="true" /> Target model endpoint
             </label>
             <input
-              id="api-key"
-              className="input"
-              type="password"
-              placeholder="bearer token"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
+              id="target-url"
+              ref={urlRef}
+              value={targetUrl}
+              onChange={(e) => setTargetUrl(e.target.value)}
+              inputMode="url"
+              spellCheck={false}
               autoComplete="off"
+              className="w-full bg-bg border border-border p-3 font-mono text-sm text-accent focus:outline-none focus:border-accent"
             />
+            <p className="font-mono text-2xs text-dim uppercase">
+              Six agents probe bias · adversarial · drift · GB/T 42118 + EU AI Act compliance.
+            </p>
           </div>
-        </div>
 
-        <div className="flex items-center gap-3 mt-7 flex-wrap">
-          <button type="submit" className="btn flex items-center gap-2" disabled={busy}>
-            {busy ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Play size={16} aria-hidden="true" />}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label htmlFor="model-name" className="font-mono text-xs uppercase font-bold flex items-center gap-2 text-text">
+                <span className="w-1 h-1 bg-accent" aria-hidden="true" /> Model name / version
+              </label>
+              <input
+                id="model-name"
+                value={modelName}
+                onChange={(e) => setModelName(e.target.value)}
+                className="w-full bg-bg border border-border p-3 font-mono text-sm text-text focus:outline-none focus:border-accent"
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="api-key" className="font-mono text-xs uppercase font-bold flex items-center gap-2 text-text">
+                <span className="w-1 h-1 bg-accent" aria-hidden="true" /> API key (optional)
+              </label>
+              <input
+                id="api-key"
+                type="password"
+                placeholder="bearer token"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                autoComplete="off"
+                className="w-full bg-bg border border-border p-3 font-mono text-sm text-text placeholder:text-dim focus:outline-none focus:border-accent"
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={busy}
+            className="w-full bg-accent text-bg py-4 font-display font-bold text-lg uppercase tracking-wide flex items-center justify-center gap-3 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {busy ? <Loader2 size={18} className="animate-spin" aria-hidden="true" /> : <Rocket size={18} aria-hidden="true" />}
             {busy ? "Launching audit" : "Launch audit"}
           </button>
-          <button
-            type="button"
-            className="btn btn-ghost flex items-center gap-2"
-            onClick={() => {
-              setTargetUrl(DEMO_URL);
-              setModelName("demo-target-v1");
-            }}
-          >
-            <Crosshair size={16} aria-hidden="true" /> Use demo target
-          </button>
-        </div>
 
-        {error && (
-          <p className="mt-4 text-[12px]" style={{ color: "var(--fail)" }} role="alert">
-            {error}
-          </p>
-        )}
+          {error && (
+            <p className="font-mono text-xs text-danger" role="alert">
+              ⚠ {error}
+            </p>
+          )}
+
+          <div className="flex items-center justify-between pt-3 border-t border-border">
+            <button
+              type="button"
+              onClick={() => {
+                setTargetUrl(DEMO_URL);
+                setModelName("demo-target-v1");
+              }}
+              className="flex items-center gap-2 font-mono text-2xs uppercase text-muted hover:text-accent"
+            >
+              <Crosshair size={13} aria-hidden="true" /> Use demo target
+            </button>
+            <div className="flex gap-4 font-mono text-2xs uppercase text-dim">
+              <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 bg-accent" aria-hidden="true" /> Core_sync</span>
+              <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 bg-accent" aria-hidden="true" /> Ed25519</span>
+            </div>
+          </div>
+        </div>
       </form>
     </main>
   );

@@ -8,31 +8,36 @@ import CertificateViewer from "./components/CertificateViewer";
 import { AuditStreamProvider, useAuditState } from "./context/AuditStreamContext";
 import type { ConnectionStatus } from "./hooks/useAuditStream";
 
-const CONNECTION_COPY: Record<ConnectionStatus, { label: string; color: string }> = {
-  connecting: { label: "Connecting", color: "var(--warn)" },
-  live: { label: "Live · WebSocket", color: "var(--pass)" },
-  reconnecting: { label: "Reconnecting", color: "var(--warn)" },
-  closed: { label: "Stream closed", color: "var(--fail)" },
-  complete: { label: "Audit complete", color: "var(--accent)" },
+const CONNECTION_COPY: Record<ConnectionStatus, { label: string; dot: string }> = {
+  connecting: { label: "Connecting", dot: "bg-warning" },
+  live: { label: "Live · WS", dot: "bg-success" },
+  reconnecting: { label: "Reconnecting", dot: "bg-warning" },
+  closed: { label: "Stream closed", dot: "bg-danger" },
+  complete: { label: "Complete", dot: "bg-accent" },
 };
 
-function StatusBar({ auditId }: { auditId: string }) {
+function NavStatus() {
   const navigate = useNavigate();
   const s = useAuditState();
   const conn = CONNECTION_COPY[s.connection];
   const findings = s.probes.filter((p) => !p.passed).length;
 
   return (
-    <div className="px-6 py-3 flex items-center justify-between text-[11px]" style={{ color: "var(--muted)" }}>
-      <div className="flex items-center gap-5" role="status" aria-live="polite">
-        <span>
-          <span aria-hidden="true" style={{ color: conn.color }}>●</span> {conn.label}
-        </span>
-        <span>Probes <span className="accent">{s.probes.length}</span></span>
-        <span>Findings <span style={{ color: findings ? "var(--fail)" : "var(--muted)" }}>{findings}</span></span>
-        <span className="hidden sm:inline">Audit <span style={{ color: "var(--text)" }}>{auditId}</span></span>
-      </div>
-      <button className="btn btn-ghost" style={{ padding: "6px 12px" }} onClick={() => navigate("/")}>
+    <div className="flex items-center gap-4 font-mono text-2xs uppercase" role="status" aria-live="polite">
+      <span className="flex items-center gap-2 text-muted">
+        <span className={`w-2 h-2 ${conn.dot}`} aria-hidden="true" /> {conn.label}
+      </span>
+      <span className="text-muted hidden sm:inline">
+        Probes <span className="text-accent">{s.probes.length}</span>
+      </span>
+      <span className="text-muted hidden sm:inline">
+        Findings <span className={findings ? "text-danger" : "text-muted"}>{findings}</span>
+      </span>
+      <button
+        type="button"
+        onClick={() => navigate("/")}
+        className="border border-border px-3 py-1 text-muted hover:text-accent hover:border-accent"
+      >
         New audit
       </button>
     </div>
@@ -41,23 +46,33 @@ function StatusBar({ auditId }: { auditId: string }) {
 
 function DashboardInner({ auditId }: { auditId: string }) {
   return (
-    <>
-      <Header subtitle={`Audit ${auditId}`} />
-      <StatusBar auditId={auditId} />
-      <main className="grid grid-cols-12 gap-4 px-6 pb-8">
-        <div className="col-span-12 lg:col-span-3 space-y-4">
+    <div className="min-h-screen lg:h-screen flex flex-col lg:overflow-hidden bg-bg text-text">
+      <Header subtitle={`Audit ${auditId}`} right={<NavStatus />} />
+      <div className="flex flex-col lg:flex-row flex-1 lg:overflow-hidden">
+        {/* Left sidebar — agent pipeline */}
+        <aside
+          className="lg:w-[240px] shrink-0 border-b lg:border-b-0 lg:border-r border-border bg-surface lg:overflow-y-auto focus:outline-none"
+          tabIndex={0}
+          aria-label="Agent pipeline"
+        >
           <AgentTimeline />
-        </div>
-        <div className="col-span-12 lg:col-span-5">
+        </aside>
+        {/* Main — live probe feed */}
+        <main className="flex-1 min-w-0 flex flex-col lg:overflow-hidden min-h-[460px]">
           <ProbeStream />
-        </div>
-        <div className="col-span-12 lg:col-span-4 space-y-4">
+        </main>
+        {/* Right telemetry — bias + compliance */}
+        <aside
+          className="lg:w-80 shrink-0 border-t lg:border-t-0 lg:border-l border-border bg-surface lg:overflow-y-auto focus:outline-none"
+          tabIndex={0}
+          aria-label="Audit telemetry"
+        >
           <BiasRadar />
           <ComplianceMatrix />
-        </div>
-      </main>
+        </aside>
+      </div>
       <CertificateViewer auditId={auditId} />
-    </>
+    </div>
   );
 }
 
