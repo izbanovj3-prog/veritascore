@@ -1,0 +1,11 @@
+.git
+.venv
+**/node_modules
+frontend/dist
+keys
+certificates
+*.db
+__pycache__
+**/__pycache__
+.claude
+.plans

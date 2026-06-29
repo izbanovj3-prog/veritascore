@@ -5,14 +5,17 @@
 
 from __future__ import annotations
 
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from backend.certificate.signer import ensure_keys, public_key_fingerprint, public_key_pem
 from backend.config import settings
 from backend.db.session import init_db
+from backend.demo_target import app as demo_target_app
 from backend.routers import audit, certificate, ws
 
 
@@ -53,3 +56,14 @@ async def public_key() -> dict:
         "fingerprint": public_key_fingerprint(),
         "pem": public_key_pem(),
     }
+
+
+# Single-service deploy (e.g. Render): also expose the demo target model and serve
+# the built frontend from this same app, so one public URL runs real audits.
+app.mount("/demo-target", demo_target_app)
+
+_DIST = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "dist")
+if os.path.isdir(_DIST):
+    # Mounted LAST so the API routes above take precedence. The SPA uses hash
+    # routing, so no server-side fallback is needed.
+    app.mount("/", StaticFiles(directory=_DIST, html=True), name="frontend")

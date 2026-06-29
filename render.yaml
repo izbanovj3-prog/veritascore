@@ -1,0 +1,16 @@
+# Render Blueprint — one public web service that serves the frontend, the API,
+# and the demo-target model, so the live URL runs real-time audits.
+# Deploy: render.com -> New -> Blueprint -> point at this repo.
+services:
+  - type: web
+    name: veritascore
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PROBE_DELAY_MS
+        value: "120"
+      - key: EMBEDDING_BACKEND
+        value: auto

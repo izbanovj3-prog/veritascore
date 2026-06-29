@@ -3,8 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { ShieldCheck, Rocket, Loader2, Crosshair } from "lucide-react";
 import { startAudit } from "../api/client";
 
-const DEMO_URL = "http://localhost:8001/v1/respond";
 const DEMO = (import.meta as any).env?.VITE_DEMO_MODE === "1";
+
+// Local dev points at the demo target on :8001; a deployed host (e.g. Render)
+// serves the demo target from the same origin at /demo-target.
+const DEMO_URL =
+  typeof window !== "undefined" && !/^(localhost|127\.|\[?::1)/.test(window.location.hostname)
+    ? `${window.location.origin}/demo-target/v1/respond`
+    : "http://localhost:8001/v1/respond";
 
 export default function AuditLauncher() {
   const navigate = useNavigate();
