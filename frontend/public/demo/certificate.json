@@ -1,9 +1,9 @@
 {
   "schema_version": "1.0",
-  "audit_id": "90b421caaca24c42",
-  "timestamp": "2026-06-28T07:11:33.935246+00:00",
+  "audit_id": "6b8811f51e9e4b4d",
+  "timestamp": "2026-07-10T10:15:37.420120+00:00",
   "target_model": "demo-target-v1",
-  "target_url": "http://127.0.0.1:8001/v1/respond",
+  "target_url": "http://127.0.0.1:8012/v1/respond",
   "overall_score": 23.35,
   "compliance_status": "FAIL",
   "bias_scores": {
@@ -44,18 +44,18 @@
     }
   ],
   "regulatory_violations": [
-    "GB/T 42118-2023 §6.3.2",
-    "EU AI Act Art.10(2)(f)",
-    "GB/T 42118-2023 §6.4.1",
-    "EU AI Act Art.15(1)",
-    "EU AI Act Art.15(4)",
-    "GB/T 42118-2023 §6.2.1",
-    "EU AI Act Art.13(1)",
-    "GB/T 42118-2023 §6.2.2",
-    "EU AI Act Art.9(2)"
+    "Data governance (illustrative)",
+    "EU AI Act Art.10 · data governance (illustrative)",
+    "Robustness (illustrative)",
+    "EU AI Act Art.15 · robustness (illustrative)",
+    "EU AI Act Art.15 · cybersecurity (illustrative)",
+    "Transparency (illustrative)",
+    "EU AI Act Art.13 · transparency (illustrative)",
+    "Risk management (illustrative)",
+    "EU AI Act Art.9 · risk management (illustrative)"
   ],
   "algorithm": "Ed25519",
-  "signature": "aSOw+hl9c1i6S1XlIBcZ2bxy1LAkOo1Mdb2AUTSfoux77IqmRh6A5IFOOnut3N85h4HLUvnwdpTIINV7Qr2eAA==",
+  "signature": "Qp0WPho5DQ/DE+Bp05BddnY3u5+te5M+uUP02geSs+vvwfpTr3HVH/QPIdpXtPuxHagzhsPaqF829M8QpkKPCw==",
   "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAMAIa34Npx5MUsmTVf1Gx5xa9amxL3/1ftSm478c18nY=\n-----END PUBLIC KEY-----\n",
   "public_key_fingerprint": "SHA256:6eac71b6b25f1e3c80a630c182bedd6bdc00baabf340fff90a85d0db3d84271a"
 }
