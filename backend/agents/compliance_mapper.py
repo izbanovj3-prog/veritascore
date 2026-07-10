@@ -1,7 +1,8 @@
-"""Compliance mapper — maps failing probes to GB/T + EU AI Act clauses.
+"""Compliance mapper — maps failing probes to illustrative regulatory themes.
 
 Reads ``COMPLIANCE_MAPPING`` (the single source of truth in the probe library) so
-the regulatory clauses can never disagree with the probe tags.
+the regulatory labels can never disagree with the probe tags. The labels are
+illustrative EU AI Act themes, not verified legal citations (see probe_library).
 """
 
 from __future__ import annotations

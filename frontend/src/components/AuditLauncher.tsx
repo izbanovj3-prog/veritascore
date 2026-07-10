@@ -88,7 +88,7 @@ export default function AuditLauncher() {
               className="w-full bg-bg border border-border p-3 font-mono text-sm text-accent focus:outline-none focus:border-accent"
             />
             <p className="font-mono text-2xs text-dim uppercase">
-              Six agents probe bias · adversarial · drift · GB/T 42118 + EU AI Act compliance.
+              Six agents probe bias · adversarial · drift · EU AI Act compliance (illustrative mapping).
             </p>
           </div>
 

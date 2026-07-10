@@ -8,6 +8,7 @@ __pycache__/
 veritascore*.db
 keys/
 certificates/
+logs/
 .env
 
 # Generated baselines are kept (the demo baseline is committed); ignore others

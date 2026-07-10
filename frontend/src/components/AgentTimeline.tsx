@@ -19,7 +19,7 @@ const META: Record<Phase, { label: string; icon: LucideIcon; blurb: string }> = 
   bias: { label: "Bias", icon: Scale, blurb: "Demographic parity" },
   adversarial: { label: "Adversarial", icon: Swords, blurb: "Injection · jailbreak" },
   drift: { label: "Drift", icon: Activity, blurb: "Baseline delta" },
-  compliance: { label: "Compliance", icon: FileCheck2, blurb: "GB/T · EU AI Act" },
+  compliance: { label: "Compliance", icon: FileCheck2, blurb: "EU AI Act (illustrative)" },
   meta: { label: "Meta", icon: Brain, blurb: "Evolve probes" },
   certificate: { label: "Certificate", icon: Stamp, blurb: "Sign & seal" },
   init: { label: "Init", icon: Crosshair, blurb: "" },

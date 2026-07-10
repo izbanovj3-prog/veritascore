@@ -1,9 +1,15 @@
 """Seed probe library (64 probes) + the regulatory clause mapping.
 
 ``COMPLIANCE_MAPPING`` is the single source of truth that links a probe taxonomy
-key (e.g. ``"bias.gender"``) to the GB/T 42118-2023 and EU AI Act clauses it
-exercises. Both the probe definitions and the ``compliance_mapper`` agent read
-from it, so the two can never drift apart.
+key (e.g. ``"bias.gender"``) to an **illustrative** regulatory theme it exercises.
+Both the probe definitions and the ``compliance_mapper`` agent read from it, so
+the two can never drift apart.
+
+IMPORTANT — the regulatory references below are ILLUSTRATIVE and map probe
+categories to the *thematic* area of the EU AI Act they relate to (Art.9 risk
+management, Art.10 data governance, Art.13 transparency, Art.15 robustness).
+They are a demonstration mapping and have NOT been verified against the enacted
+legal text; do not treat them as a legal conformity assessment.
 
 Bias probes come in *pairs*: two probes whose prompts are byte-for-byte identical
 except for the value of one protected attribute. The bias evaluator embeds both
@@ -20,18 +26,21 @@ Severity = Literal["low", "medium", "high", "critical"]
 
 
 # ---------------------------------------------------------------------------
-# Regulatory clause mapping (single source of truth)
+# Regulatory clause mapping (single source of truth) — ILLUSTRATIVE.
+# First element = governance domain (illustrative), second = the EU AI Act
+# thematic article. Neither is a verified legal citation; see the module
+# docstring. The domain label deliberately carries no specific standard number.
 # ---------------------------------------------------------------------------
 COMPLIANCE_MAPPING: dict[str, list[str]] = {
-    "bias.gender": ["GB/T 42118-2023 §6.3.2", "EU AI Act Art.10(2)(f)"],
-    "bias.ethnicity": ["GB/T 42118-2023 §6.3.2", "EU AI Act Art.10(2)(f)"],
-    # age + religion extend the same data-governance / non-discrimination clause
-    "bias.age": ["GB/T 42118-2023 §6.3.2", "EU AI Act Art.10(2)(f)"],
-    "bias.religion": ["GB/T 42118-2023 §6.3.2", "EU AI Act Art.10(2)(f)"],
-    "adversarial.injection": ["GB/T 42118-2023 §6.4.1", "EU AI Act Art.15(1)"],
-    "adversarial.jailbreak": ["GB/T 42118-2023 §6.4.1", "EU AI Act Art.15(4)"],
-    "drift.factual": ["GB/T 42118-2023 §6.2.1", "EU AI Act Art.13(1)"],
-    "drift.safety": ["GB/T 42118-2023 §6.2.2", "EU AI Act Art.9(2)"],
+    "bias.gender": ["Data governance (illustrative)", "EU AI Act Art.10 · data governance (illustrative)"],
+    "bias.ethnicity": ["Data governance (illustrative)", "EU AI Act Art.10 · data governance (illustrative)"],
+    # age + religion relate to the same data-governance / non-discrimination theme
+    "bias.age": ["Data governance (illustrative)", "EU AI Act Art.10 · data governance (illustrative)"],
+    "bias.religion": ["Data governance (illustrative)", "EU AI Act Art.10 · data governance (illustrative)"],
+    "adversarial.injection": ["Robustness (illustrative)", "EU AI Act Art.15 · robustness (illustrative)"],
+    "adversarial.jailbreak": ["Robustness (illustrative)", "EU AI Act Art.15 · cybersecurity (illustrative)"],
+    "drift.factual": ["Transparency (illustrative)", "EU AI Act Art.13 · transparency (illustrative)"],
+    "drift.safety": ["Risk management (illustrative)", "EU AI Act Art.9 · risk management (illustrative)"],
 }
 
 

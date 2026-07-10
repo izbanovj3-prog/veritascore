@@ -12,8 +12,15 @@
 autonomous "red-team" agents (real [LangGraph](https://langchain-ai.github.io/langgraph/)
 nodes) that continuously stress-test a deployed AI model for **alignment drift**,
 **bias emergence**, **adversarial vulnerability**, and **regulatory non-compliance**
-(GB/T 42118-2023 + EU AI Act), then issue a **cryptographically signed (Ed25519)
-compliance certificate**.
+(an **illustrative** EU AI Act theme mapping — see the disclaimer below), then
+issue a **cryptographically signed (Ed25519) compliance certificate**.
+
+> **Regulatory-mapping disclaimer.** The compliance labels VeritasCore attaches
+> to findings map probe categories to the *thematic* area of the EU AI Act they
+> relate to (Art.9 risk management, Art.10 data governance, Art.13 transparency,
+> Art.15 robustness). They are **illustrative** and have **not** been verified
+> against enacted legal text; this is a demonstration mapping, not a legal
+> conformity assessment.
 
 Built as a functional MVP/PoC for a live demonstration at **WAIC 2026, Shanghai**.
 
@@ -43,7 +50,7 @@ Built as a functional MVP/PoC for a live demonstration at **WAIC 2026, Shanghai*
 | **bias** | Runs 10 paired probes (identical except one protected attribute), embeds both responses, scores disparity per attribute. |
 | **adversarial** | Runs 30 injection + jailbreak probes, classifies each as `successful_attack` / `partial` / `defended`. |
 | **drift** | Runs 10 consistency probes, measures cosine distance vs a **locked baseline**. |
-| **compliance** | Maps every failing probe to GB/T 42118-2023 + EU AI Act clauses. |
+| **compliance** | Maps every failing probe to an illustrative EU AI Act theme (see disclaimer). |
 | **meta** | Computes probe effectiveness; if low, **synthesizes new probes** from the top failures and loops back once. |
 | **certificate** | Scores 0-100, signs the result with **Ed25519**, writes a real `.json` to disk. |
 
@@ -105,6 +112,63 @@ docker compose up --build      # postgres + redis + backend + celery worker + de
 Then open **http://localhost:5173** and launch an audit against
 `http://localhost:8001/v1/respond`.
 
+### C) AMD GPU — audit a **real** model on ROCm (7.2 + vLLM 0.16.0 + PyTorch 2.9)
+
+By default the target under audit is `demo_target.py` (a scripted, intentionally
+flawed stand-in). On an AMD GPU you can instead audit a **real** open-source
+model served through vLLM — `backend/vllm_target.py` is a drop-in replacement
+that speaks the exact same `/v1/respond` contract.
+
+**0. Verify the GPU stack first** (cheap; downloads a ~1 GB model, one inference):
+
+```bash
+python smoke_test.py
+# or pick the model:  SMOKE_MODEL=facebook/opt-125m python smoke_test.py
+```
+
+Expect `torch.version.hip` to be a version string (proves a ROCm build) and
+`torch.cuda.is_available()` → `True`. The summary must end with `overall: PASS`.
+
+**1. Serve the real model under audit on the GPU:**
+
+```bash
+VERITAS_TARGET_MODEL=Qwen/Qwen2.5-0.5B-Instruct \
+  uvicorn backend.vllm_target:app --host 0.0.0.0 --port 8001
+```
+
+Device provenance (torch/HIP version, GPU name) is written to
+`logs/device_info.json`, and every inference is logged to `logs/vllm_target.log`.
+
+**2. Start the auditor and run an audit against it:**
+
+```bash
+PYTHONPATH=. uvicorn backend.main:app --port 8000        # terminal 2
+
+curl -X POST localhost:8000/audit/start \                # terminal 3
+  -H 'Content-Type: application/json' \
+  -d '{"target_url":"http://localhost:8001/v1/respond","model_name":"Qwen2.5-0.5B-Instruct"}'
+```
+
+Watch it live at **http://localhost:5173** (start the frontend as in A), or poll
+`GET /audit/{id}/status`; the signed certificate lands in `certificates/<id>.json`.
+
+**Containerized (ROCm):**
+
+```bash
+# Pin BASE to the rocm/vllm tag matching your ROCm 7.2 / vLLM 0.16.0 stack:
+docker build -f Dockerfile.rocm --build-arg BASE=rocm/vllm:<your-tag> -t veritascore-rocm .
+
+# GPU passthrough is required for ROCm containers:
+docker run --rm -it \
+  --device=/dev/kfd --device=/dev/dri --group-add video \
+  --security-opt seccomp=unconfined --ipc=host --shm-size 8g \
+  -p 8001:8001 -e VERITAS_TARGET_MODEL=Qwen/Qwen2.5-0.5B-Instruct \
+  veritascore-rocm
+```
+
+> **Note.** vLLM does not run natively on Windows; the ROCm path is for the AMD
+> Linux notebook. Sections A/B run anywhere (they never touch a GPU).
+
 ---
 
 ## WAIC demo script (≈4 min)
@@ -113,7 +177,7 @@ Then open **http://localhost:5173** and launch an audit against
 2. **T+0:20** Click **Launch Audit** — the agent pipeline lights up, triage runs.
 3. **T+0:40** Bias probes stream in; red `FAIL` badges appear; the **bias radar** spikes on **gender**.
 4. **T+1:30** Adversarial phase: a `CRITICAL` system-prompt-extraction finding appears.
-5. **T+2:30** The **compliance matrix** fills red across GB/T §6.3.2 and EU AI Act Art.10/15.
+5. **T+2:30** The **compliance matrix** fills red across the EU AI Act Art.10/15 themes (illustrative).
 6. **T+3:00** Meta-agent: *"synthesized N new probes"* — coverage evolves and re-runs.
 7. **T+3:30** Certificate appears: **23/100 · FAIL**, Ed25519 signature **VERIFIED**. Download JSON / PDF.
 
@@ -153,6 +217,8 @@ print(verify_certificate(json.load(open("certificates/<audit_id>.json"))))  # Tr
   `synthetic`) unless an `ANTHROPIC_API_KEY` is supplied.
 - The **adversarial classifier** is a transparent heuristic (refusal / compliance /
   leak markers), not a trained judge model.
+- The **regulatory mapping is illustrative** (EU AI Act themes) and is not a
+  verified legal conformity assessment — see the disclaimer at the top.
 - The signing key is **locally generated** (no HSM / CA chain); single-node, no
   auth or multi-tenancy.
 - A per-request target API key is accepted by the launcher but not yet threaded to

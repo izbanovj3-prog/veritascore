@@ -1,0 +1,62 @@
+# VeritasCore — ROCm image for the live pipeline (AMD GPU).
+#
+# This containerizes the GPU-backed audit pipeline:
+#   * backend/vllm_target.py  — the real model under audit, served via vLLM (GPU)
+#   * backend/main.py         — the auditor (pure-Python; CPU) that probes it
+#
+# The base image already ships a matching ROCm build of PyTorch + vLLM, so we do
+# NOT pip-install torch/vllm here (installing them from PyPI would pull the CUDA
+# build and break ROCm). We only add VeritasCore's pure-Python dependencies.
+#
+# ── Pin the base to your notebook's stack ───────────────────────────────────
+# Target: ROCm 7.2 + vLLM 0.16.0 + PyTorch 2.9. Set BASE to the AMD-published
+# vLLM image whose tag matches those exact versions. Tags are listed at
+# https://hub.docker.com/r/rocm/vllm/tags — pick the ROCm 7.2 / vLLM 0.16.0 tag
+# and pass it at build time so the container mirrors the host driver stack:
+#
+#   docker build -f Dockerfile.rocm \
+#     --build-arg BASE=rocm/vllm:<rocm7.2-vllm0.16.0-tag> -t veritascore-rocm .
+#
+ARG BASE=rocm/vllm:latest
+FROM ${BASE}
+
+WORKDIR /app
+
+# App source + metadata (torch/vllm come from the base image).
+COPY pyproject.toml ./
+COPY backend ./backend
+COPY baselines ./baselines
+
+# Install ONLY the core pure-Python deps, without touching the base's torch/vllm.
+# We install the pinned list explicitly rather than `pip install .` so setuptools
+# never tries to resolve/replace the GPU stack already present in the image.
+RUN python -m pip install --no-cache-dir \
+      "fastapi>=0.110" \
+      "uvicorn>=0.29" \
+      "websockets>=12" \
+      "langgraph>=0.2.50" \
+      "langchain-core>=0.3" \
+      "pydantic>=2.6" \
+      "pydantic-settings>=2.2" \
+      "cryptography>=42" \
+      "httpx>=0.27" \
+      "sqlalchemy[asyncio]>=2.0" \
+      "aiosqlite>=0.20" \
+      "reportlab>=4.0" \
+      "python-dotenv>=1.0"
+
+# vLLM target defaults (override at run time with -e).
+ENV VERITAS_TARGET_MODEL=Qwen/Qwen2.5-0.5B-Instruct \
+    VLLM_GPU_MEM_UTIL=0.80 \
+    VLLM_MAX_MODEL_LEN=4096 \
+    VLLM_ENFORCE_EAGER=1 \
+    PYTHONPATH=/app \
+    PYTHONUNBUFFERED=1
+
+EXPOSE 8000 8001
+
+# Default: serve the real model under audit on the GPU.
+# Run the auditor from the SAME image by overriding the command, e.g.:
+#   docker run ... veritascore-rocm \
+#     uvicorn backend.main:app --host 0.0.0.0 --port 8000
+CMD ["uvicorn", "backend.vllm_target:app", "--host", "0.0.0.0", "--port", "8001"]
