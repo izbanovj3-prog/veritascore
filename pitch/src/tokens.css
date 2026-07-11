@@ -1,0 +1,54 @@
+/*
+  VeritasCore — Audit Deck tokens (single source of truth)
+  Register: cold, industrial, mission-critical infrastructure.
+  Every color in the deck resolves here; components use var() only.
+*/
+:root {
+  /* ── Surfaces ── */
+  --bg: #080c10;               /* near-black, slight blue tint */
+  --surface: #0d1219;          /* one step up — panels */
+  --surface-2: #111a24;        /* two steps — rows, cells */
+  --border: #1f2c3d;           /* visible 1px structure */
+  --border-dim: #141e2b;       /* faint grid lines / dividers */
+  --grid-line: rgba(200, 214, 232, 0.035);
+
+  /* ── Ink ── */
+  --text: #c8d6e8;             /* primary */
+  --text-bright: #f0f6fd;      /* display headlines */
+  --muted: #7891a5;            /* secondary — 5.9:1 on --bg */
+
+  /* ── Accent (one sharp accent, used sparingly) ── */
+  --accent: #00e5ff;
+  --accent-dim: rgba(0, 229, 255, 0.10);
+  --accent-border: rgba(0, 229, 255, 0.38);
+
+  /* ── Semantic ── */
+  --danger: #ff4d6d;           /* FAIL / CRITICAL / flagged */
+  --danger-dim: rgba(255, 77, 109, 0.12);
+  --warning: #ffb454;          /* HIGH / WARN */
+  --warning-dim: rgba(255, 180, 84, 0.12);
+  --success: #58b884;          /* PASS only */
+  --success-dim: rgba(88, 184, 132, 0.12);
+
+  /* ── Type ── */
+  --font-display: "Besley", Georgia, "Times New Roman", serif;
+  --font-body: "Public Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+
+  /* ── Motion ── */
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 180ms;
+  --dur-base: 420ms;
+
+  /* ── Layout ── */
+  --pad: clamp(36px, 5vw, 92px);
+  --z-chrome: 10;
+  --z-overview: 20;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-base: 0ms;
+  }
+}

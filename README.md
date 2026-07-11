@@ -8,6 +8,29 @@
 > For the fully live backend, run locally (below) or deploy the backend to a
 > Python host.
 
+### 🏆 AMD Developer Hackathon — Act II · Track 3 (Unicorn) submission
+
+| For judges | Link |
+|---|---|
+| **Live demo** (recorded run, fully client-side) | https://izbanovj3-prog.github.io/veritascore/ |
+| **Pitch deck** (interactive, animated — arrows to navigate) | https://izbanovj3-prog.github.io/veritascore/pitch/ |
+| Pitch deck as PDF | [pitch/VeritasCore-deck.pdf](pitch/VeritasCore-deck.pdf) |
+| Run it on an AMD GPU (ROCm 7.2 + vLLM 0.16) | **Run it → section C** below |
+
+**The AMD story.** Continuously auditing a deployed model means keeping three
+models warm at once: the **target** under audit, a **red-team** model that
+generates attacks, and an **embedding** model for similarity/drift scoring.
+AMD Instinct **MI300X's 192 GB HBM3** holds all three **resident
+simultaneously**, so the full six-agent pipeline runs on **one GPU** with zero
+external API calls — nothing ever leaves the box. The auditor itself is a
+clean black-box HTTP client; the GPU integration point is serving the audited
+model via **vLLM on ROCm** (`backend/vllm_target.py` + `smoke_test.py` +
+`Dockerfile.rocm`). By default the demo audits a scripted flawed stand-in
+(`demo_target.py`); on ROCm you point the same pipeline at a real model —
+see section C.
+
+---
+
 **Autonomous AI behavioral auditing infrastructure.** VeritasCore deploys six
 autonomous "red-team" agents (real [LangGraph](https://langchain-ai.github.io/langgraph/)
 nodes) that continuously stress-test a deployed AI model for **alignment drift**,
