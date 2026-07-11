@@ -221,10 +221,19 @@ docker run --rm -it \
 
 Verify a downloaded certificate yourself:
 
+```bash
+python scripts/verify_cert.py certificates/<audit_id>.json    # → VERIFIED
+```
+
+or in Python (note `encoding="utf-8"` — certificates contain non-ASCII
+characters, and a locale-default `open()` on Windows corrupts the canonical
+bytes and falsely reports an invalid signature):
+
 ```python
 import json
 from backend.certificate.signer import verify_certificate
-print(verify_certificate(json.load(open("certificates/<audit_id>.json"))))  # True
+cert = json.load(open("certificates/<audit_id>.json", encoding="utf-8"))
+print(verify_certificate(cert))  # True
 ```
 
 ---
