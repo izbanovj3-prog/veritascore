@@ -71,7 +71,7 @@ export default function AgentTimeline() {
                 <div className="flex items-center gap-3 min-w-0">
                   <span className="font-mono text-2xs text-dim w-5 text-right">{String(i + 1).padStart(2, "0")}</span>
                   <span
-                    className={`font-display font-bold text-sm uppercase truncate ${
+                    className={`font-display font-semibold text-[15px] leading-tight uppercase truncate ${
                       st === "waiting" ? "text-muted" : "text-text"
                     }`}
                   >
@@ -80,7 +80,7 @@ export default function AgentTimeline() {
                 </div>
                 <StatusGlyph st={st} />
               </div>
-              <div className="font-mono text-2xs text-dim ml-8 mt-0.5">
+              <div className="font-mono text-xs font-normal text-muted ml-8 mt-1">
                 {active ? <span className="text-accent">RUNNING</span> : m.blurb}
               </div>
             </li>

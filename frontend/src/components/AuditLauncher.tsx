@@ -66,8 +66,8 @@ export default function AuditLauncher() {
         </div>
 
         {DEMO && (
-          <div className="mb-6 border border-accent-border bg-accent-dim px-3 py-2 font-mono text-2xs text-text">
-            <span className="text-accent">●</span> RECORDED DEMO — the Python backend isn't hosted on
+          <div className="mb-6 border border-border px-3 py-2 font-mono text-2xs text-muted">
+            <span className="text-dim">●</span> RECORDED DEMO — the Python backend isn't hosted on
             GitHub Pages. Launch replays a real audit run (real probe stream + the real Ed25519-signed certificate).
           </div>
         )}
@@ -123,7 +123,7 @@ export default function AuditLauncher() {
           <button
             type="submit"
             disabled={busy}
-            className="w-full bg-accent text-bg py-4 font-display font-bold text-lg uppercase tracking-wide flex items-center justify-center gap-3 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-transparent border border-accent text-accent py-4 font-display font-bold text-lg uppercase tracking-wide flex items-center justify-center gap-3 hover:bg-accent-dim disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {busy ? <Loader2 size={18} className="animate-spin" aria-hidden="true" /> : <Rocket size={18} aria-hidden="true" />}
             {busy ? "Launching audit" : "Launch audit"}

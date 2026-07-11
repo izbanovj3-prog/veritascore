@@ -65,16 +65,17 @@ export default function ProbeStream() {
 
   return (
     <section className="flex flex-col h-full min-h-0 bg-bg" aria-label="Live probe stream">
-      {/* Feed header */}
-      <div className="h-12 flex-shrink-0 border-b border-border bg-surface px-4 flex items-center justify-between gap-3">
+      {/* Feed header — wraps to a second row on narrow (mobile) viewports */}
+      <div className="flex-shrink-0 border-b border-border bg-surface px-4 py-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 min-h-12">
         <div className="flex items-center gap-3 min-w-0">
           <Radio size={16} className={live ? "text-accent status-running" : "text-muted"} aria-hidden="true" />
           <h2 className="font-display font-bold text-sm tracking-widest uppercase">Probe_Feed</h2>
           <span
-            className={`px-2 py-0.5 border text-2xs font-mono uppercase ${
-              live ? "border-accent text-accent" : "border-border text-muted"
+            className={`inline-flex items-center gap-1.5 px-2 py-0.5 border text-2xs font-mono uppercase ${
+              live ? "border-accent bg-accent-dim text-accent" : "border-border text-muted"
             }`}
           >
+            {live && <span className="w-1.5 h-1.5 rounded-full bg-accent status-running" aria-hidden="true" />}
             {live ? "Live_Probe" : connection}
           </span>
         </div>

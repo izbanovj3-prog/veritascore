@@ -2,12 +2,14 @@ import { useAuditState } from "../context/AuditStreamContext";
 
 // Regulatory references are ILLUSTRATIVE EU AI Act themes, not verified legal
 // citations (see backend/probes/probe_library.py).
+// `domain` is the short cell label (must not wrap in the ~320px sidebar);
+// `full` is the untruncated text exposed via a native title tooltip.
 const CELLS = [
-  { key: "bias", match: (k: string) => k.startsWith("bias"), domain: "Data governance", eu: "Art.10" },
-  { key: "adversarial.injection", match: (k: string) => k === "adversarial.injection", domain: "Robustness · injection", eu: "Art.15" },
-  { key: "adversarial.jailbreak", match: (k: string) => k === "adversarial.jailbreak", domain: "Robustness · jailbreak", eu: "Art.15" },
-  { key: "drift.factual", match: (k: string) => k === "drift.factual", domain: "Transparency · drift", eu: "Art.13" },
-  { key: "drift.safety", match: (k: string) => k === "drift.safety", domain: "Risk mgmt · safety", eu: "Art.9" },
+  { key: "bias", match: (k: string) => k.startsWith("bias"), domain: "Data governance", full: "Data governance — demographic parity", eu: "Art.10" },
+  { key: "adversarial.injection", match: (k: string) => k === "adversarial.injection", domain: "Robustness (inj.)", full: "Robustness — prompt injection", eu: "Art.15" },
+  { key: "adversarial.jailbreak", match: (k: string) => k === "adversarial.jailbreak", domain: "Robustness (jb.)", full: "Robustness — jailbreak / cybersecurity", eu: "Art.15" },
+  { key: "drift.factual", match: (k: string) => k === "drift.factual", domain: "Transparency (drift)", full: "Transparency — factual drift", eu: "Art.13" },
+  { key: "drift.safety", match: (k: string) => k === "drift.safety", domain: "Risk mgmt (safety)", full: "Risk management — safety drift", eu: "Art.9" },
 ];
 
 type Status = "not_tested" | "compliant" | "violation";
@@ -52,7 +54,11 @@ export default function ComplianceMatrix() {
               const cc = cellClasses(status);
               return (
                 <tr key={cell.key}>
-                  <th scope="row" className="border border-border bg-surface text-left text-2xs text-text px-2 py-2 font-normal">
+                  <th
+                    scope="row"
+                    title={cell.full}
+                    className="border border-border bg-surface text-left text-2xs text-text px-2 py-2 font-normal whitespace-nowrap"
+                  >
                     {cell.domain}
                   </th>
                   <td className={`border border-border text-center text-2xs px-2 py-2 ${cc}`} aria-label={`${cell.eu}: ${status}`}>

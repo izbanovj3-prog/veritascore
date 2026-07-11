@@ -84,7 +84,7 @@ export default function CertificateViewer({ auditId }: { auditId: string }) {
           <div className="p-8">
             <div className="flex items-start justify-between gap-4 pr-8">
               <div>
-                <h2 id="cert-title" className="font-display text-xs uppercase tracking-widest text-muted">
+                <h2 id="cert-title" className="font-display text-xs font-semibold uppercase tracking-widest text-text">
                   Signed audit certificate
                 </h2>
                 <p className="font-mono text-xs text-muted mt-1">
@@ -101,7 +101,7 @@ export default function CertificateViewer({ auditId }: { auditId: string }) {
                 {overall ?? "—"}
                 <span className="text-muted text-xl">/100</span>
               </div>
-              <div className="font-display text-2xs uppercase tracking-widest text-muted mt-1">Overall compliance score</div>
+              <div className="font-display text-2xs font-semibold uppercase tracking-widest text-text mt-1">Overall compliance score</div>
             </div>
 
             <div className="border-t border-border" />
@@ -121,14 +121,27 @@ export default function CertificateViewer({ auditId }: { auditId: string }) {
             </dl>
 
             <div className="border-t border-border mt-3 pt-3">
-              <div className="font-display text-2xs uppercase tracking-widest text-muted mb-2">Regulatory violations</div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="font-display text-2xs font-semibold uppercase tracking-widest text-text">Regulatory violations</div>
+                {certificate && certificate.regulatory_violations.length > 0 && (
+                  <div className="flex items-center gap-3 font-mono text-2xs uppercase">
+                    <span className="flex items-center gap-1 text-accent"><span className="w-1.5 h-1.5 bg-accent" aria-hidden="true" /> EU AI Act</span>
+                    <span className="flex items-center gap-1 text-warning"><span className="w-1.5 h-1.5 bg-warning" aria-hidden="true" /> Governance</span>
+                  </div>
+                )}
+              </div>
               {certificate && certificate.regulatory_violations.length > 0 ? (
                 <ul className="space-y-1">
-                  {certificate.regulatory_violations.map((v) => (
-                    <li key={v} className="font-mono text-xs text-accent">
-                      ✗ {v}
-                    </li>
-                  ))}
+                  {certificate.regulatory_violations.map((v) => {
+                    // Two label families are colour-coded so a regulator can scan
+                    // for their framework: EU AI Act theme refs vs. governance domains.
+                    const isEu = v.includes("EU AI Act");
+                    return (
+                      <li key={v} className={`font-mono text-xs ${isEu ? "text-accent" : "text-warning"}`}>
+                        ✗ {v}
+                      </li>
+                    );
+                  })}
                 </ul>
               ) : (
                 <p className="font-mono text-xs text-success">None — no clauses violated</p>

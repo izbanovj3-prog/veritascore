@@ -24,10 +24,13 @@
   --color-accent-dim: rgba(0, 229, 255, 0.15);  /* accent backgrounds */
   --color-accent-border: rgba(0, 229, 255, 0.40);/* accent borders / glow */
 
-  /* ── Semantic ── */
-  --color-danger: #ff3d00;        /* FAIL, CRITICAL, error states */
-  --color-danger-dim: rgba(255, 61, 0, 0.15);
-  --color-danger-solid: #ff3d00;  /* solid critical fill */
+  /* ── Semantic ──
+     Danger is the pitch deck's crimson (#ff4d6d), not the old scarlet #ff3d00:
+     scarlet reads as orange next to the amber warning tone, which made FAIL
+     badges look like warnings. One red, used by both FAIL and CRITICAL. */
+  --color-danger: #ff4d6d;        /* FAIL, CRITICAL, error states */
+  --color-danger-dim: rgba(255, 77, 109, 0.15);
+  --color-danger-solid: #ff4d6d;  /* solid critical fill */
   --color-warning: #ffb300;       /* HIGH severity, CONDITIONAL status */
   --color-warning-dim: rgba(255, 179, 0, 0.15);
   --color-success: #00c853;       /* PASS, complete states */
