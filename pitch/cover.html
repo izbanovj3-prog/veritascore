@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Besley:ital,wght@0,700;0,800;1,700&family=JetBrains+Mono:wght@400;500;700&family=Public+Sans:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg:#080c10; --surface:#0d1219; --surface-2:#111a24; --border:#1f2c3d;
+    --grid-line:rgba(200,214,232,0.04);
+    --text:#c8d6e8; --text-bright:#f0f6fd; --muted:#7891a5;
+    --accent:#00e5ff; --accent-dim:rgba(0,229,255,0.10); --accent-border:rgba(0,229,255,0.38);
+    --danger:#ff4d6d; --danger-dim:rgba(255,77,109,0.12);
+    --font-display:"Besley",Georgia,serif; --font-body:"Public Sans",system-ui,sans-serif;
+    --font-mono:"JetBrains Mono",ui-monospace,monospace;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); }
+  .cover {
+    position:relative; width:1280px; height:640px; overflow:hidden;
+    background:
+      radial-gradient(ellipse 90% 80% at 74% 42%, rgba(0,229,255,0.06), transparent 60%),
+      radial-gradient(ellipse 70% 90% at 8% 110%, rgba(255,77,109,0.05), transparent 55%),
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+      var(--bg);
+    background-size:auto,auto,64px 64px,64px 64px,auto;
+    color:var(--text); font-family:var(--font-body);
+    display:flex; align-items:center;
+  }
+  /* corner brackets */
+  .brackets{position:absolute;inset:26px;pointer-events:none}
+  .brackets svg{position:absolute;width:38px;height:38px}
+  .brackets .tl{top:0;left:0}.brackets .tr{top:0;right:0;transform:scaleX(-1)}
+  .brackets .bl{bottom:0;left:0;transform:scaleY(-1)}.brackets .br{bottom:0;right:0;transform:scale(-1)}
+
+  .left{flex:1.12; padding:0 0 0 84px; min-width:0}
+  .kicker{font-family:var(--font-mono);font-size:13px;letter-spacing:0.24em;color:var(--accent)}
+  .hero{font-family:var(--font-display);font-weight:800;font-size:104px;line-height:0.98;letter-spacing:-0.015em;color:var(--text-bright);margin:20px 0 8px}
+  .hero em{font-style:italic;font-weight:700;color:var(--accent)}
+  .rule{width:64px;height:2px;background:var(--accent);box-shadow:0 0 12px var(--accent-border);margin:14px 0 20px}
+  .sub{font-size:19px;line-height:1.55;color:var(--muted);max-width:30ch}
+  .sub b{color:var(--text);font-weight:600}
+  .chips{display:flex;flex-wrap:wrap;gap:9px;margin-top:26px}
+  .chip{font-family:var(--font-mono);font-size:12px;letter-spacing:0.09em;color:var(--muted);border:1px solid var(--border);padding:6px 12px;background:var(--surface)}
+  .chip.hot{color:var(--accent);border-color:var(--accent-border);background:var(--accent-dim)}
+
+  .right{flex:0.88; position:relative; height:100%; display:flex; align-items:center; justify-content:center}
+  .radar-wrap{position:relative;transform:translateY(-30px)}
+  .radar-wrap svg{width:430px;height:auto;display:block;overflow:visible}
+  /* verdict card */
+  .verdict{
+    position:absolute; right:64px; bottom:70px;
+    border:1px solid var(--border); outline:1px solid var(--border-dim); outline-offset:4px;
+    background:rgba(13,18,25,0.82); backdrop-filter:blur(2px);
+    padding:16px 20px; display:flex; align-items:center; gap:18px;
+  }
+  .verdict .score{font-family:var(--font-mono);font-weight:700;font-size:52px;line-height:1;letter-spacing:-0.02em;color:var(--text-bright)}
+  .verdict .of{font-family:var(--font-mono);font-size:15px;color:var(--muted)}
+  .verdict .col{display:flex;flex-direction:column;gap:7px}
+  .stamp{font-family:var(--font-mono);font-weight:700;font-size:19px;letter-spacing:0.16em;color:var(--danger);border:2px solid var(--danger);background:var(--danger-dim);padding:3px 12px;transform:rotate(-4deg)}
+  .verdict .sig{font-family:var(--font-mono);font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px}
+  .verdict .sig b{color:var(--accent);font-weight:500}
+
+  .footer{position:absolute;left:84px;bottom:40px;display:flex;gap:22px;align-items:center;font-family:var(--font-mono);font-size:12.5px;letter-spacing:0.05em;color:var(--muted)}
+  .footer .wm{color:var(--text)}
+  .footer .wm b{color:var(--accent);font-weight:500}
+</style>
+</head>
+<body>
+<div class="cover" id="cover">
+  <div class="brackets">
+    <svg class="tl" viewBox="0 0 38 38"><path d="M37 1 L1 1 L1 37" fill="none" stroke="var(--accent)" stroke-width="1.5"/></svg>
+    <svg class="tr" viewBox="0 0 38 38"><path d="M37 1 L1 1 L1 37" fill="none" stroke="var(--accent)" stroke-width="1.5"/></svg>
+    <svg class="bl" viewBox="0 0 38 38"><path d="M37 1 L1 1 L1 37" fill="none" stroke="var(--accent)" stroke-width="1.5"/></svg>
+    <svg class="br" viewBox="0 0 38 38"><path d="M37 1 L1 1 L1 37" fill="none" stroke="var(--accent)" stroke-width="1.5"/></svg>
+  </div>
+
+  <div class="left">
+    <div class="kicker">AMD DEVELOPER HACKATHON · ACT II · UNICORN TRACK</div>
+    <div class="hero">Veritas<em>Core</em></div>
+    <div class="rule"></div>
+    <div class="sub">Real-time <b>AI behavioral auditing</b> — six autonomous agents, one <b>MI300X</b>, zero external API calls.</div>
+    <div class="chips">
+      <span class="chip hot">MI300X</span>
+      <span class="chip hot">ROCm</span>
+      <span class="chip hot">vLLM</span>
+      <span class="chip">LangGraph</span>
+      <span class="chip">Ed25519</span>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="radar-wrap">
+      <svg id="radar" viewBox="0 0 420 360" aria-label="Bias parity radar, gender flagged"></svg>
+    </div>
+    <div class="verdict">
+      <span class="score">23.35</span>
+      <span class="of">/100</span>
+      <div class="col">
+        <span class="stamp">FAIL</span>
+        <span class="sig">✓ <b>Ed25519</b> signed</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span class="wm">VERITAS<b>CORE</b></span>
+    <span>github.com/izbanovj3-prog/veritascore</span>
+  </div>
+</div>
+
+<script>
+  // Radar motif — 6 protected axes, GENDER flagged red at Δ0.53. Mirrors the deck.
+  const AXES = [
+    {label:"GENDER", v:0.53, flag:true},
+    {label:"AGE", v:0.08, flag:false},
+    {label:"ETHNICITY", v:0.11, flag:false},
+    {label:"RELIGION", v:0.06, flag:false},
+    {label:"DISABILITY", v:0.09, flag:false},
+    {label:"NATIONALITY", v:0.13, flag:false},
+  ];
+  const CX=210, CY=180, R=118, TH=0.25, NS="http://www.w3.org/2000/svg";
+  const svg=document.getElementById("radar");
+  const pt=(i,r)=>{const a=(-90+i*60)*Math.PI/180;return [CX+r*Math.cos(a),CY+r*Math.sin(a)];};
+  const poly=rs=>rs.map((r,i)=>{const[x,y]=pt(i,r);return (i?"L":"M")+x.toFixed(1)+" "+y.toFixed(1);}).join(" ")+" Z";
+  const el=(n,at)=>{const e=document.createElementNS(NS,n);for(const k in at)e.setAttribute(k,at[k]);return e;};
+
+  // grid rings
+  [0.5,0.75,1].forEach(f=>svg.appendChild(el("path",{d:poly(AXES.map(()=>R*f)),fill:"none",stroke:"var(--border)","stroke-width":1})));
+  // parity threshold ring
+  svg.appendChild(el("path",{d:poly(AXES.map(()=>R*TH)),fill:"none",stroke:"var(--danger)","stroke-width":1,"stroke-dasharray":"3 4",opacity:0.6}));
+  svg.appendChild(el("text",{x:CX+8,y:CY-R*TH-6,"font-family":"var(--font-mono)","font-size":10,fill:"var(--danger)",opacity:0.8})).textContent="PARITY 0.25";
+
+  // spokes + labels
+  AXES.forEach((a,i)=>{
+    const[x,y]=pt(i,R); const[lx,ly]=pt(i,R+18);
+    svg.appendChild(el("line",{x1:CX,y1:CY,x2:x,y2:y,stroke:"var(--border-dim)","stroke-width":1}));
+    const anchor=(i===0||i===3)?"middle":(i<3?"start":"end");
+    const dy=i===0?-4:(i===3?12:4);
+    const t=el("text",{x:lx,y:ly+dy,"text-anchor":anchor,"font-family":"var(--font-mono)","font-size":12.5,"letter-spacing":"0.06em",fill:a.flag?"var(--danger)":"var(--muted)"});
+    t.textContent=a.label; svg.appendChild(t);
+  });
+
+  // value shape
+  const disp=v=>R*Math.max(v,0.04);
+  svg.appendChild(el("path",{d:poly(AXES.map(a=>disp(a.v))),fill:"var(--accent-dim)",stroke:"var(--accent)","stroke-width":1.8}));
+  // vertices
+  AXES.forEach((a,i)=>{const[x,y]=pt(i,disp(a.v));
+    if(a.flag){
+      svg.appendChild(el("circle",{cx:x,cy:y,r:9,fill:"none",stroke:"var(--danger)","stroke-width":1,opacity:0.5}));
+      svg.appendChild(el("circle",{cx:x,cy:y,r:5,fill:"var(--danger)"}));
+      const t=el("text",{x:x+16,y:y+5,"font-family":"var(--font-mono)","font-size":15,"font-weight":700,fill:"var(--danger)"});
+      t.textContent="Δ0.53"; svg.appendChild(t);
+    } else {
+      svg.appendChild(el("circle",{cx:x,cy:y,r:2.6,fill:"var(--accent)"}));
+    }
+  });
+  window.__coverReady=true;
+</script>
+</body>
+</html>

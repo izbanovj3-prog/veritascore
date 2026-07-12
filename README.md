@@ -1,5 +1,7 @@
 # VeritasCore
 
+![VeritasCore — real-time AI behavioral auditing on AMD MI300X](pitch/cover.png)
+
 ### ▶ Live demo: **https://izbanovj3-prog.github.io/veritascore/**
 
 > GitHub Pages is static-only (no Python backend), so the live site runs in
