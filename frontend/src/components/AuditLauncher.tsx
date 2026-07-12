@@ -66,9 +66,15 @@ export default function AuditLauncher() {
         </div>
 
         {DEMO && (
-          <div className="mb-6 border border-border px-3 py-2 font-mono text-2xs text-muted">
-            <span className="text-dim">●</span> RECORDED DEMO — the Python backend isn't hosted on
-            GitHub Pages. Launch replays a real audit run (real probe stream + the real Ed25519-signed certificate).
+          <div className="mb-6 border border-border bg-surface-2 px-3 py-2.5 flex items-start gap-2.5">
+            <span className="shrink-0 font-mono text-2xs font-bold uppercase tracking-wider text-text border border-dim px-1.5 py-0.5">
+              Recorded demo
+            </span>
+            <p className="font-mono text-xs text-muted leading-relaxed">
+              The Python backend isn&apos;t hosted on GitHub Pages — Launch replays a{" "}
+              <span className="text-text font-medium">real recorded audit</span>: the actual probe
+              stream and the real Ed25519-signed certificate.
+            </p>
           </div>
         )}
 
